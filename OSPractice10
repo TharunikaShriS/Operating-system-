@@ -1,0 +1,36 @@
+#include <stdio.h>
+
+int main() {
+    int n, i;
+    int bt[10], wt[10];
+    float avgWT = 0;
+
+    printf("Enter the number of processes: ");
+    scanf("%d", &n);
+
+    printf("Enter Burst Time for each process:\n");
+    for(i = 0; i < n; i++) {
+        printf("P%d: ", i + 1);
+        scanf("%d", &bt[i]);
+    }
+
+    // First process has zero waiting time
+    wt[0] = 0;
+
+    // Calculate waiting time for each process
+    for(i = 1; i < n; i++) {
+        wt[i] = wt[i - 1] + bt[i - 1];
+    }
+
+    printf("\nProcess\tBurst Time\tWaiting Time\n");
+    for(i = 0; i < n; i++) {
+        printf("P%d\t%d\t\t%d\n", i + 1, bt[i], wt[i]);
+        avgWT += wt[i];
+    }
+
+    avgWT = avgWT / n;
+
+    printf("\nAverage Waiting Time = %.2f\n", avgWT);
+
+    return 0;
+}
