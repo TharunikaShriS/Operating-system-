@@ -59,6 +59,16 @@ END
 4.b) wait() is used to stop the execution of parent process until its child process finishes or stops.
 4.c)
 START
+Create a child process using fork()
+IF fork() return 0 THEN
+ Execute ls l using exec()
+ELSE IF parent process
+ Wait for child process to finish 
+ show "child process completed"
+ELSE
+show "fork failed"
+END IF
+END
 
 
 5.a) File management acts as the interface between user and the system to access files like reading,writing,truncating. 
@@ -66,6 +76,14 @@ It stores the data into the storage devices and make them easily retrivable when
 5.b)open() - open() is used to inform the OS that a file needs to be accessed and based on the permissions such as O_CREAT, OWRONLY, it does operations suching reading,writing
 close() closes the file and stops access to the file.
 5.b)
+START
+Open the file in read mode
+Read the contents of the source file 
+WHILE data can be read from souce file
+  show "data read"
+END WHILE
+close file
+END
 
 
 
