@@ -2,6 +2,18 @@
 1.b) In managing multiple user process, the kernel should allow users to execute programs simultaneously and 
 1.c) 
 Start
+Call fork() to craete a new process
+IF fork() returns to 0 THEN
+Show "Child process"
+Show "Child process ID"
+ELSE IF fork() > 0 THEN
+Show "Parent Process"
+Show "Parent Process ID"
+ELSE 
+Show "Fork Failed"
+END IF
+End
+
 
 
 
