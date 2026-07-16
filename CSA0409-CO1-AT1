@@ -1,5 +1,5 @@
 1.a) The type of operating system required for such environment is Multiprocessing OS, because Multiprocessing OS allows multiple users to execute tasks simultaneously.
-1.b) In managing multiple user process, the kernel should allow users to execute programs simultaneously and 
+1.b) In managing multiple user process, the kernel should do Process Management(track of how a process is created and executed) and Resource Allocation (kernel should allocate memory and space for all users to avoid deadlocks)
 1.c) 
 Start
 Call fork() to craete a new process
@@ -14,8 +14,58 @@ Show "Fork Failed"
 END IF
 End
 
+2.a) FILE CREATION - open(file name, O_CREAT|O_WRONLY,mode)
+WRITING - write() copies the input from user to the file
+READING - read() reads the data from the file and stores in memory
+CLOSING - close() closes the file and stops access to the file.
+2.b) open() - open() is used to inform the OS that a file needs to be accessed and based on the permissions such as O_CREAT, OWRONLY, it does operations suching reading,writing
+ read() - when a file is opened, the read() copies the data from the file and sends to the memory buffer allocated.
+2.c)
+START
+Create array to store students name
+Open the file
+IF the file opens successfully THEN
+Read the students name stored in array
+write the name into the file
+close the file
+ELSE 
+shoe "Error opening the file"
+END IF
+End
+
+3.a) FILE CREATION - open(file name, O_CREAT|O_WRONLY,mode)
+WRITING - write() copies the input from user to the file
+READING - read() reads the data from the file and stores in memory
+CLOSING - close() closes the file and stops access to the file.
+
+It opens a file using open() , reads the data from the souce file using read() , open() destination file, write data from source to destination using write(), finally close both source and destination file usingIt opens a file using open() , reads the data from the souce file using read() , open() destination file, write data from source to destination using write(), finally close() both source and destination file using close()
+3.b) open() - open() is used to inform the OS that a file needs to be accessed and based on the permissions such as O_CREAT, OWRONLY, it does operations suching reading,writing
+ read() - when a file is opened, the read() copies the data from the file and sends to the memory buffer allocated.
+3.c)
+START
+Open the source file in read mode
+Open the destination file in write mode
+Read the contents of the source file 
+WHILE data can be read from souce file
+  write it into the destination file
+END WHILE
+close source file
+close destination file
+END
 
 
+4.a) fork() is used to create a new child process from the exisiting parent process by duplicating it.
+ exec() is used to a new program by replacing the current running process.
+4.b) wait() is used to stop the execution of parent process until its child process finishes or stops.
+4.c)
+START
+
+
+5.a) File management acts as the interface between user and the system to access files like reading,writing,truncating. 
+It stores the data into the storage devices and make them easily retrivable whenever needed.
+5.b)open() - open() is used to inform the OS that a file needs to be accessed and based on the permissions such as O_CREAT, OWRONLY, it does operations suching reading,writing
+close() closes the file and stops access to the file.
+5.b)
 
 
 
