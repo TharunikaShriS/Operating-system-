@@ -1,0 +1,45 @@
+#include <stdio.h>
+#include <fcntl.h>
+#include <unistd.h>
+#include <sys/stat.h>
+#include <time.h>
+
+int main() {
+    int fd;
+    struct stat fileStat;
+
+    fd = open("sample.txt", O_WRONLY | O_CREAT | O_TRUNC, 0644);
+    if (fd == -1) {
+        printf("Error creating file.\n");
+        return 1;
+    }
+
+    char text[] = "This is a sample file.";
+    write(fd, text, sizeof(text) - 1);
+    close(fd);
+
+    if (stat("sample.txt", &fileStat) == -1) {
+        printf("Error getting file information.\n");
+        return 1;
+    }
+    printf("File Size: %ld bytes\n", fileStat.st_size);
+
+    printf("File Permissions: ");
+
+    printf((fileStat.st_mode & S_IRUSR) ? "r" : "-");
+    printf((fileStat.st_mode & S_IWUSR) ? "w" : "-");
+    printf((fileStat.st_mode & S_IXUSR) ? "x" : "-");
+
+    printf((fileStat.st_mode & S_IRGRP) ? "r" : "-");
+    printf((fileStat.st_mode & S_IWGRP) ? "w" : "-");
+    printf((fileStat.st_mode & S_IXGRP) ? "x" : "-");
+
+    printf((fileStat.st_mode & S_IROTH) ? "r" : "-");
+    printf((fileStat.st_mode & S_IWOTH) ? "w" : "-");
+    printf((fileStat.st_mode & S_IXOTH) ? "x" : "-");
+
+    printf("\n");
+    printf("Last Modification Time: %s", ctime(&fileStat.st_mtime));
+
+    return 0;
+}
