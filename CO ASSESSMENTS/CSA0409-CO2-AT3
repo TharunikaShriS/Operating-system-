@@ -1,0 +1,46 @@
+Q1. Deadlock Debugging (Code Trace)
+
+Process P1: lock(R1) → wait(100 ms) → lock(R2) → critical section → unlock(R2) → unlock(R1)
+Process P2: lock(R2) → wait(100 ms) → lock(R1) → critical section → unlock(R1) → unlock(R2)
+
+Condition Causing Deadlock
+When P1 and P2 run concurrently, P1 acquires R1 first and then waits to acquire R2, while at the same time P2 acquires R2 first and waits to acquire R1. Each process holds one resource while waiting indefinitely for the resource held by the other. This creates a circular wait, which along with mutual exclusion, hold-and-wait, and no preemption, is one of the four necessary conditions for deadlock. Since neither process can proceed and neither releases its held resource, the system reaches a permanent deadlock.
+
+Optimization to Eliminate the Deadlock
+Without changing the order in which the process logic requests locks, the deadlock can be eliminated by enforcing a global resource ordering at the lock manager or operating system level. All lock requests are transparently granted in a fixed order, for example always R1 before R2, regardless of the order in which a process calls lock(). This way, P2's request sequence is internally satisfied as R1 first and R2 second, matching P1's order, so a circular wait can never form. Alternatively, a try-lock with timeout mechanism can be used, where if a process cannot acquire its second lock within a set time, it releases the resource it is holding and retries after a short delay, breaking the hold-and-wait condition without modifying the program's logic.
+
+
+Q2. CPU Utilization Problem
+
+Debugging the Cause
+The repeated ready-to-waiting transitions indicate that the processes are highly I/O-bound: they run for a very short time on the CPU before issuing an I/O request and blocking again. The low CPU utilization suggests that the degree of multiprogramming is too low, meaning there are not enough other ready processes available to keep the CPU busy whenever the current process blocks for I/O. As a result, the CPU frequently sits idle waiting for I/O completions instead of executing useful work, which explains the low 30 percent utilization despite processes technically cycling through the ready state.
+
+System-Level Optimization
+CPU utilization can be improved by increasing the degree of multiprogramming, that is, allowing more processes into the ready queue so the scheduler always has an alternative process to run when one blocks for I/O. Using a multilevel feedback queue that mixes CPU-bound and I/O-bound processes ensures better overlap between computation and I/O. Additionally, adopting asynchronous or non-blocking I/O reduces the need for full context switches on every I/O request, and tuning the scheduler to quickly dispatch waiting-turned-ready processes minimizes idle CPU time.
+
+
+Q3. Memory Bottleneck Debugging
+
+Identifying the Memory Issue
+The program itself uses only about 180 MB (5 MB code + 150 MB heap + 25 MB stacks for 25 threads), which is well within the 2 GB of physical RAM available. The frequent page faults are therefore not simply due to insufficient total memory, but rather due to thrashing caused by poor locality of reference: with 25 threads all actively accessing a large shared 150 MB heap concurrently, along with other processes competing for the same physical RAM, the actively used working set of pages at any instant can exceed the number of physical frames allocated to the process. This forces the operating system to repeatedly swap pages in and out, and the large number of threads also increases context-switching and cache/TLB pressure, further increasing page fault frequency.
+
+Proposed Optimizations
+First, reduce the number of concurrently running threads by using a thread pool with a bounded size instead of creating 25 full threads, which lowers total stack overhead and reduces contention for physical memory frames. Second, use a memory allocator optimized for multi-threaded workloads (such as a thread-local or pooled heap allocator) to improve locality of reference and reduce fragmentation, and consider enabling huge pages to reduce the number of page table entries and TLB misses, which together reduce the frequency of page faults.
+
+
+Q4. Starvation Debugging
+
+Root Cause of Starvation
+In a strict multilevel queue scheduler, a lower-priority queue is only serviced when all higher-priority queues are completely empty. Since Q1 (interactive) and Q2 (system) processes arrive frequently and are always given precedence, Q3 rarely, if ever, gets a chance to run whenever Q1 or Q2 continues to receive new jobs. Because P5 resides in Q3, which uses FCFS with no time-based priority boost, it can be indefinitely postponed as long as higher-priority queues remain non-empty, resulting in starvation.
+
+Optimization to Ensure Fairness
+The most effective solution is to introduce aging, converting the strict multilevel queue into a multilevel feedback queue. Under aging, a process's priority is gradually increased the longer it waits in a lower queue. Once P5's waiting time crosses a defined threshold, it is promoted to a higher-priority queue such as Q2 or even Q1, guaranteeing that it will eventually be scheduled. This ensures fairness by preventing any process from waiting indefinitely, while still allowing interactive and system processes to be prioritized under normal conditions.
+
+
+Q5. Context-Switch Overhead Debugging
+
+Why Context Switching Is So High
+The time quantum of 1ms is smaller than the average burst time of 2ms, which means most threads are forcibly preempted before they finish their current burst of execution. A single 2ms burst therefore requires at least two scheduling rounds and two context switches instead of one, effectively doubling the switching overhead relative to actual useful work performed. This problem is compounded by the very high I/O wait frequency: threads frequently block for I/O and get swapped out, then get switched back in once I/O completes, adding even more context switches on top of the preemptions caused by the short quantum. Together, these factors drive the context-switch rate up to 20,000 per second, consuming CPU time in overhead rather than actual processing.
+
+Proposed Optimizations
+First, increase the time quantum to be closer to or slightly above the average burst time, for example 2 to 4ms, so that most threads can complete their burst within a single quantum, reducing unnecessary preemptions while still keeping the system reasonably responsive. Second, adopt an I/O-aware or multilevel feedback queue scheduling approach that minimizes full context switches for frequent, short I/O waits, for example by using asynchronous I/O or interrupt coalescing to batch I/O completion handling, thereby reducing the number of times the scheduler needs to switch context purely to service I/O events.
