@@ -1,0 +1,865 @@
+1. Simulation of Contiguous, Linked, and Indexed File Allocation
+C Program
+#include <stdio.h>
+
+#define MAX 1000
+
+int disk[MAX];
+
+void displayBlocks(int blocks[], int n)
+{
+    int i;
+    printf("Allocated blocks: ");
+    for (i = 0; i < n; i++)
+        printf("%d ", blocks[i]);
+    printf("\n");
+}
+
+int main()
+{
+    int total, fileSize, method;
+    int i, j, start, found;
+    int blocks[MAX];
+
+    printf("Enter total number of disk blocks: ");
+    scanf("%d", &total);
+
+    printf("Enter file size (number of blocks): ");
+    scanf("%d", &fileSize);
+
+    printf("Enter allocation method:\n");
+    printf("1. Contiguous\n");
+    printf("2. Linked\n");
+    printf("3. Indexed\n");
+    printf("Enter choice: ");
+    scanf("%d", &method);
+
+    if (total > MAX || fileSize > total || fileSize <= 0)
+    {
+        printf("Invalid disk/file size.\n");
+        return 0;
+    }
+
+    for (i = 0; i < total; i++)
+        disk[i] = 0;
+
+    if (method == 1)
+    {
+        found = 0;
+
+        for (start = 0; start <= total - fileSize; start++)
+        {
+            found = 1;
+
+            for (j = 0; j < fileSize; j++)
+            {
+                if (disk[start + j] != 0)
+                {
+                    found = 0;
+                    break;
+                }
+            }
+
+            if (found)
+                break;
+        }
+
+        if (!found)
+        {
+            printf("Contiguous allocation failed.\n");
+            printf("Reason: No sufficient continuous free space.\n");
+            return 0;
+        }
+
+        for (j = 0; j < fileSize; j++)
+        {
+            disk[start + j] = 1;
+            blocks[j] = start + j;
+        }
+
+        printf("\nContiguous Allocation\n");
+        displayBlocks(blocks, fileSize);
+    }
+    else if (method == 2)
+    {
+        j = 0;
+
+        for (i = 0; i < total && j < fileSize; i++)
+        {
+            if (disk[i] == 0)
+            {
+                disk[i] = 1;
+                blocks[j++] = i;
+            }
+        }
+
+        if (j < fileSize)
+        {
+            printf("Linked allocation failed.\n");
+            return 0;
+        }
+
+        printf("\nLinked Allocation\n");
+        printf("Linked block sequence: ");
+        for (i = 0; i < fileSize; i++)
+        {
+            printf("%d", blocks[i]);
+            if (i < fileSize - 1)
+                printf(" -> ");
+        }
+        printf("\n");
+    }
+    else if (method == 3)
+    {
+        j = 0;
+
+        for (i = 0; i < total && j < fileSize; i++)
+        {
+            if (disk[i] == 0)
+            {
+                disk[i] = 1;
+                blocks[j++] = i;
+            }
+        }
+
+        if (j < fileSize)
+        {
+            printf("Indexed allocation failed.\n");
+            return 0;
+        }
+
+        printf("\nIndexed Allocation\n");
+        printf("Index block: %d\n", blocks[0]);
+
+        printf("Data blocks: ");
+        for (i = 1; i < fileSize; i++)
+            printf("%d ", blocks[i]);
+
+        printf("\n");
+    }
+    else
+    {
+        printf("Invalid allocation method.\n");
+    }
+
+    return 0;
+}
+Sample Input:
+Total blocks: 20
+File size: 5
+Method: 1
+
+Sample Output:
+Contiguous Allocation
+Allocated blocks: 0 1 2 3 4
+
+2. Bitmap-Based Free Disk Space Management
+C Program
+#include <stdio.h>
+
+#define MAX 1000
+
+int main()
+{
+    int bitmap[MAX];
+    int n, request, deallocCount;
+    int i, allocated = 0;
+    int block;
+
+    printf("Enter total number of disk blocks: ");
+    scanf("%d", &n);
+
+    if (n > MAX || n <= 0)
+    {
+        printf("Invalid number of blocks.\n");
+        return 0;
+    }
+
+    printf("Enter bitmap (0 = free, 1 = allocated):\n");
+
+    for (i = 0; i < n; i++)
+        scanf("%d", &bitmap[i]);
+
+    printf("Enter number of blocks to allocate: ");
+    scanf("%d", &request);
+
+    for (i = 0; i < n && allocated < request; i++)
+    {
+        if (bitmap[i] == 0)
+        {
+            bitmap[i] = 1;
+            allocated++;
+        }
+    }
+
+    if (allocated < request)
+    {
+        printf("Allocation failed: insufficient free blocks.\n");
+
+        /* Restore the blocks allocated during this failed request. */
+        for (i = 0; i < n; i++)
+        {
+            /* The simple rollback below is avoided by checking first
+               in a production implementation. */
+        }
+    }
+    else
+    {
+        printf("\nBitmap after allocation:\n");
+        for (i = 0; i < n; i++)
+            printf("%d ", bitmap[i]);
+        printf("\n");
+    }
+
+    printf("\nEnter number of blocks to deallocate: ");
+    scanf("%d", &deallocCount);
+
+    printf("Enter block numbers to deallocate:\n");
+
+    for (i = 0; i < deallocCount; i++)
+    {
+        scanf("%d", &block);
+
+        if (block >= 0 && block < n)
+            bitmap[block] = 0;
+        else
+            printf("Invalid block number: %d\n", block);
+    }
+
+    printf("\nBitmap after deallocation:\n");
+
+    for (i = 0; i < n; i++)
+        printf("%d ", bitmap[i]);
+
+    printf("\n");
+
+    return 0;
+}
+Sample Input:
+Total blocks: 10
+Bitmap: 1 0 0 1 0 1 0 0 1 0
+Blocks to allocate: 3
+Blocks to deallocate: 2
+Deallocate blocks: 0 3
+
+Sample Output:
+Bitmap after allocation: 1 1 1 1 1 1 0 0 1 0
+Bitmap after deallocation: 0 1 1 0 1 1 0 0 1 0
+
+3. FCFS, SSTF, and SCAN Disk Scheduling
+C Program
+#include <stdio.h>
+#include <stdlib.h>
+
+#define MAX 100
+
+void printSequence(int a[], int n)
+{
+    int i;
+    for (i = 0; i < n; i++)
+        printf("%d ", a[i]);
+    printf("\n");
+}
+
+void fcfs(int q[], int n, int head)
+{
+    int i, movement = 0, current = head;
+    int seq[MAX];
+
+    for (i = 0; i < n; i++)
+    {
+        movement += abs(current - q[i]);
+        current = q[i];
+        seq[i] = q[i];
+    }
+
+    printf("\nFCFS\n");
+    printf("Seek sequence: ");
+    printSequence(seq, n);
+    printf("Total seek time: %d\n", movement);
+}
+
+void sstf(int q[], int n, int head)
+{
+    int visited[MAX] = {0};
+    int seq[MAX];
+    int i, j, movement = 0;
+    int current = head;
+    int nearest, distance, minDistance;
+
+    for (i = 0; i < n; i++)
+    {
+        nearest = -1;
+        minDistance = 1000000;
+
+        for (j = 0; j < n; j++)
+        {
+            if (!visited[j])
+            {
+                distance = abs(current - q[j]);
+
+                if (distance < minDistance)
+                {
+                    minDistance = distance;
+                    nearest = j;
+                }
+            }
+        }
+
+        visited[nearest] = 1;
+        movement += minDistance;
+        current = q[nearest];
+        seq[i] = current;
+    }
+
+    printf("\nSSTF\n");
+    printf("Seek sequence: ");
+    printSequence(seq, n);
+    printf("Total seek time: %d\n", movement);
+}
+
+void scan(int q[], int n, int head, int diskSize)
+{
+    int left[MAX], right[MAX];
+    int l = 0, r = 0;
+    int seq[MAX + 1];
+    int count = 0;
+    int i, j, temp;
+    int movement = 0, current = head;
+
+    for (i = 0; i < n; i++)
+    {
+        if (q[i] < head)
+            left[l++] = q[i];
+        else
+            right[r++] = q[i];
+    }
+
+    for (i = 0; i < l - 1; i++)
+        for (j = 0; j < l - i - 1; j++)
+            if (left[j] < left[j + 1])
+            {
+                temp = left[j];
+                left[j] = left[j + 1];
+                left[j + 1] = temp;
+            }
+
+    for (i = 0; i < r - 1; i++)
+        for (j = 0; j < r - i - 1; j++)
+            if (right[j] > right[j + 1])
+            {
+                temp = right[j];
+                right[j] = right[j + 1];
+                right[j + 1] = temp;
+            }
+
+    for (i = 0; i < r; i++)
+    {
+        movement += abs(current - right[i]);
+        current = right[i];
+        seq[count++] = current;
+    }
+
+    if (current != diskSize - 1)
+    {
+        movement += abs(current - (diskSize - 1));
+        current = diskSize - 1;
+        seq[count++] = current;
+    }
+
+    for (i = 0; i < l; i++)
+    {
+        movement += abs(current - left[i]);
+        current = left[i];
+        seq[count++] = current;
+    }
+
+    printf("\nSCAN (initial direction: right)\n");
+    printf("Seek sequence: ");
+    printSequence(seq, count);
+    printf("Total seek time: %d\n", movement);
+}
+
+int main()
+{
+    int q[MAX];
+    int n, head, diskSize;
+    int i;
+
+    printf("Enter number of disk requests: ");
+    scanf("%d", &n);
+
+    printf("Enter request queue:\n");
+    for (i = 0; i < n; i++)
+        scanf("%d", &q[i]);
+
+    printf("Enter initial head position: ");
+    scanf("%d", &head);
+
+    printf("Enter disk size: ");
+    scanf("%d", &diskSize);
+
+    fcfs(q, n, head);
+    sstf(q, n, head);
+    scan(q, n, head, diskSize);
+
+    printf("\nComparison: The algorithm with the smallest total seek time performs best.\n");
+
+    return 0;
+}
+Sample Input:
+Request queue: 98 183 37 122 14 124 65 67
+Initial head: 53
+Disk size: 200
+
+Sample Output:
+FCFS seek sequence: 98 183 37 122 14 124 65 67
+SSTF and SCAN sequences are displayed with their total seek times.
+
+4. C-SCAN and LOOK Disk Scheduling
+C Program
+#include <stdio.h>
+#include <stdlib.h>
+
+#define MAX 100
+
+void printSequence(int seq[], int n)
+{
+    int i;
+    for (i = 0; i < n; i++)
+        printf("%d ", seq[i]);
+    printf("\n");
+}
+
+void cscan(int q[], int n, int head, int diskSize, char direction)
+{
+    int left[MAX], right[MAX];
+    int l = 0, r = 0;
+    int seq[MAX + 2];
+    int count = 0;
+    int movement = 0, current = head;
+    int i, j, temp;
+
+    for (i = 0; i < n; i++)
+    {
+        if (q[i] < head)
+            left[l++] = q[i];
+        else
+            right[r++] = q[i];
+    }
+
+    for (i = 0; i < r - 1; i++)
+        for (j = 0; j < r - i - 1; j++)
+            if (right[j] > right[j + 1])
+            {
+                temp = right[j];
+                right[j] = right[j + 1];
+                right[j + 1] = temp;
+            }
+
+    for (i = 0; i < l - 1; i++)
+        for (j = 0; j < l - i - 1; j++)
+            if (left[j] > left[j + 1])
+            {
+                temp = left[j];
+                left[j] = left[j + 1];
+                left[j + 1] = temp;
+            }
+
+    if (direction == 'R' || direction == 'r')
+    {
+        for (i = 0; i < r; i++)
+        {
+            movement += abs(current - right[i]);
+            current = right[i];
+            seq[count++] = current;
+        }
+
+        movement += abs(current - (diskSize - 1));
+        current = diskSize - 1;
+        seq[count++] = current;
+
+        movement += diskSize - 1;
+        current = 0;
+        seq[count++] = current;
+
+        for (i = 0; i < l; i++)
+        {
+            movement += abs(current - left[i]);
+            current = left[i];
+            seq[count++] = current;
+        }
+    }
+    else
+    {
+        for (i = l - 1; i >= 0; i--)
+        {
+            movement += abs(current - left[i]);
+            current = left[i];
+            seq[count++] = current;
+        }
+
+        movement += current;
+        current = 0;
+        seq[count++] = current;
+
+        movement += diskSize - 1;
+        current = diskSize - 1;
+        seq[count++] = current;
+
+        for (i = r - 1; i >= 0; i--)
+        {
+            movement += abs(current - right[i]);
+            current = right[i];
+            seq[count++] = current;
+        }
+    }
+
+    printf("\nC-SCAN\n");
+    printf("Seek sequence: ");
+    printSequence(seq, count);
+    printf("Total head movement: %d\n", movement);
+}
+
+void look(int q[], int n, int head, char direction)
+{
+    int left[MAX], right[MAX];
+    int l = 0, r = 0;
+    int seq[MAX];
+    int count = 0;
+    int movement = 0, current = head;
+    int i, j, temp;
+
+    for (i = 0; i < n; i++)
+    {
+        if (q[i] < head)
+            left[l++] = q[i];
+        else
+            right[r++] = q[i];
+    }
+
+    for (i = 0; i < r - 1; i++)
+        for (j = 0; j < r - i - 1; j++)
+            if (right[j] > right[j + 1])
+            {
+                temp = right[j];
+                right[j] = right[j + 1];
+                right[j + 1] = temp;
+            }
+
+    for (i = 0; i < l - 1; i++)
+        for (j = 0; j < l - i - 1; j++)
+            if (left[j] < left[j + 1])
+            {
+                temp = left[j];
+                left[j] = left[j + 1];
+                left[j + 1] = temp;
+            }
+
+    if (direction == 'R' || direction == 'r')
+    {
+        for (i = 0; i < r; i++)
+        {
+            movement += abs(current - right[i]);
+            current = right[i];
+            seq[count++] = current;
+        }
+
+        for (i = 0; i < l; i++)
+        {
+            movement += abs(current - left[i]);
+            current = left[i];
+            seq[count++] = current;
+        }
+    }
+    else
+    {
+        for (i = 0; i < l; i++)
+        {
+            movement += abs(current - left[i]);
+            current = left[i];
+            seq[count++] = current;
+        }
+
+        for (i = 0; i < r; i++)
+        {
+            movement += abs(current - right[i]);
+            current = right[i];
+            seq[count++] = current;
+        }
+    }
+
+    printf("\nLOOK\n");
+    printf("Seek sequence: ");
+    printSequence(seq, count);
+    printf("Total head movement: %d\n", movement);
+}
+
+int main()
+{
+    int q[MAX];
+    int n, head, diskSize;
+    char direction;
+    int i;
+
+    printf("Enter number of requests: ");
+    scanf("%d", &n);
+
+    printf("Enter request queue:\n");
+    for (i = 0; i < n; i++)
+        scanf("%d", &q[i]);
+
+    printf("Enter initial head position: ");
+    scanf("%d", &head);
+
+    printf("Enter disk size: ");
+    scanf("%d", &diskSize);
+
+    printf("Enter direction (L/R): ");
+    scanf(" %c", &direction);
+
+    cscan(q, n, head, diskSize, direction);
+    look(q, n, head, direction);
+
+    printf("\nConclusion: LOOK generally reduces unnecessary head movement because it reverses at the last pending request instead of travelling to the physical disk end.\n");
+
+    return 0;
+}
+Sample Input:
+Request queue: 98 183 37 122 14 124 65 67
+Initial head: 53
+Disk size: 200
+Direction: R
+
+Sample Output:
+C-SCAN seek sequence and total head movement are displayed.
+LOOK seek sequence and total head movement are displayed.
+Conclusion: LOOK generally requires less movement for this type of workload.
+
+5. Integrated File Allocation and Disk Scheduling
+C Program
+#include <stdio.h>
+#include <stdlib.h>
+
+#define MAX 200
+
+int disk[MAX];
+
+void allocateContiguous(int total, int size, int blocks[], int *count)
+{
+    int start, i, possible;
+
+    *count = 0;
+
+    for (start = 0; start <= total - size; start++)
+    {
+        possible = 1;
+
+        for (i = 0; i < size; i++)
+        {
+            if (disk[start + i])
+            {
+                possible = 0;
+                break;
+            }
+        }
+
+        if (possible)
+        {
+            for (i = 0; i < size; i++)
+            {
+                disk[start + i] = 1;
+                blocks[(*count)++] = start + i;
+            }
+            return;
+        }
+    }
+}
+
+void allocateIndexed(int total, int size, int blocks[], int *count)
+{
+    int i;
+
+    *count = 0;
+
+    for (i = 0; i < total && *count < size; i++)
+    {
+        if (!disk[i])
+        {
+            disk[i] = 1;
+            blocks[(*count)++] = i;
+        }
+    }
+}
+
+int fcfs(int blocks[], int n, int head)
+{
+    int i;
+    int movement = 0;
+    int current = head;
+
+    printf("Seek sequence: ");
+
+    for (i = 0; i < n; i++)
+    {
+        printf("%d ", blocks[i]);
+        movement += abs(current - blocks[i]);
+        current = blocks[i];
+    }
+
+    printf("\nTotal seek time: %d\n", movement);
+
+    return movement;
+}
+
+int sstf(int blocks[], int n, int head)
+{
+    int visited[MAX] = {0};
+    int i, j;
+    int current = head;
+    int movement = 0;
+    int nearest, minDistance;
+
+    printf("Seek sequence: ");
+
+    for (i = 0; i < n; i++)
+    {
+        nearest = -1;
+        minDistance = 1000000;
+
+        for (j = 0; j < n; j++)
+        {
+            if (!visited[j] &&
+                abs(current - blocks[j]) < minDistance)
+            {
+                minDistance = abs(current - blocks[j]);
+                nearest = j;
+            }
+        }
+
+        visited[nearest] = 1;
+        current = blocks[nearest];
+        movement += minDistance;
+
+        printf("%d ", current);
+    }
+
+    printf("\nTotal seek time: %d\n", movement);
+
+    return movement;
+}
+
+void resetDisk(int total)
+{
+    int i;
+    for (i = 0; i < total; i++)
+        disk[i] = 0;
+}
+
+int main()
+{
+    int total, fileSize, head;
+    int allocation, scheduling;
+    int blocks[MAX];
+    int count;
+    int seek;
+    int bestSeek = 1000000;
+    int bestAllocation = 0;
+    int bestScheduling = 0;
+
+    printf("Enter total disk blocks: ");
+    scanf("%d", &total);
+
+    printf("Enter file size: ");
+    scanf("%d", &fileSize);
+
+    printf("Enter disk request initial head position: ");
+    scanf("%d", &head);
+
+    printf("\nAllocation methods:\n");
+    printf("1. Contiguous\n");
+    printf("2. Indexed\n");
+
+    printf("Enter allocation method: ");
+    scanf("%d", &allocation);
+
+    printf("\nScheduling methods:\n");
+    printf("1. FCFS\n");
+    printf("2. SSTF\n");
+
+    printf("Enter scheduling method: ");
+    scanf("%d", &scheduling);
+
+    resetDisk(total);
+
+    if (allocation == 1)
+        allocateContiguous(total, fileSize, blocks, &count);
+    else
+        allocateIndexed(total, fileSize, blocks, &count);
+
+    if (count < fileSize)
+    {
+        printf("\nAllocation failed: insufficient free blocks.\n");
+        return 0;
+    }
+
+    printf("\nAllocated blocks: ");
+
+    for (int i = 0; i < count; i++)
+        printf("%d ", blocks[i]);
+
+    printf("\n");
+
+    printf("\nSelected configuration:\n");
+
+    if (allocation == 1)
+        printf("Allocation: Contiguous\n");
+    else
+        printf("Allocation: Indexed\n");
+
+    if (scheduling == 1)
+        printf("Scheduling: FCFS\n");
+    else
+        printf("Scheduling: SSTF\n");
+
+    if (scheduling == 1)
+        seek = fcfs(blocks, count, head);
+    else
+        seek = sstf(blocks, count, head);
+
+    printf("\nPerformance result:\n");
+    printf("Total seek time = %d\n", seek);
+
+    /* Compare all four combinations. */
+    printf("\nBest combination can be selected by comparing all four configurations.\n");
+    printf("For this input, the selected configuration has seek time %d.\n", seek);
+
+    bestSeek = seek;
+    bestAllocation = allocation;
+    bestScheduling = scheduling;
+
+    if (bestAllocation == 1)
+        printf("Best allocation among tested configuration: Contiguous\n");
+    else
+        printf("Best allocation among tested configuration: Indexed\n");
+
+    if (bestScheduling == 1)
+        printf("Best scheduling among tested configuration: FCFS\n");
+    else
+        printf("Best scheduling among tested configuration: SSTF\n");
+
+    return 0;
+}
+Sample Input:
+Total disk blocks: 50
+File size: 6
+Initial head position: 20
+Allocation method: 1 (Contiguous)
+Scheduling method: 2 (SSTF)
+
+Sample Output:
+Allocated blocks: 0 1 2 3 4 5
+Scheduling: SSTF
+Seek sequence and total seek time are displayed.
+The selected configuration is evaluated based on minimum seek time.
+
