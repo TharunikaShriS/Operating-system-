@@ -144,12 +144,11 @@ int main()
 
     return 0;
 }
-Sample Input:
+Input:
 Total blocks: 20
 File size: 5
 Method: 1
-
-Sample Output:
+Output:
 Contiguous Allocation
 Allocated blocks: 0 1 2 3 4
 
@@ -235,14 +234,14 @@ int main()
 
     return 0;
 }
-Sample Input:
+Input:
 Total blocks: 10
 Bitmap: 1 0 0 1 0 1 0 0 1 0
 Blocks to allocate: 3
 Blocks to deallocate: 2
 Deallocate blocks: 0 3
 
-Sample Output:
+Output:
 Bitmap after allocation: 1 1 1 1 1 1 0 0 1 0
 Bitmap after deallocation: 0 1 1 0 1 1 0 0 1 0
 
@@ -407,12 +406,11 @@ int main()
 
     return 0;
 }
-Sample Input:
+Input:
 Request queue: 98 183 37 122 14 124 65 67
 Initial head: 53
 Disk size: 200
-
-Sample Output:
+Output:
 FCFS seek sequence: 98 183 37 122 14 124 65 67
 SSTF and SCAN sequences are displayed with their total seek times.
 
@@ -625,13 +623,13 @@ int main()
 
     return 0;
 }
-Sample Input:
+Input:
 Request queue: 98 183 37 122 14 124 65 67
 Initial head: 53
 Disk size: 200
 Direction: R
 
-Sample Output:
+Output:
 C-SCAN seek sequence and total head movement are displayed.
 LOOK seek sequence and total head movement are displayed.
 Conclusion: LOOK generally requires less movement for this type of workload.
@@ -850,14 +848,14 @@ int main()
 
     return 0;
 }
-Sample Input:
+Input:
 Total disk blocks: 50
 File size: 6
 Initial head position: 20
 Allocation method: 1 (Contiguous)
 Scheduling method: 2 (SSTF)
 
-Sample Output:
+Output:
 Allocated blocks: 0 1 2 3 4 5
 Scheduling: SSTF
 Seek sequence and total seek time are displayed.
