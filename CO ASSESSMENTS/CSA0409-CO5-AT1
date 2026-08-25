@@ -49,11 +49,11 @@ So, available for VMs:
 Five VMs require:
 5 × 2 = 10 GB
 Therefore, allocate 2 GB to each VM and keep 2 GB as a reserve.
-| Resource |   RAM |
-| -------- | ----: |
+| Resource |  RAM  |
+| -------- | ----- |
 | Host OS  |  4 GB |
 | 5 VMs    | 10 GB |
 | Reserve  |  2 GB |
-The reserve can be dynamically assigned using memory ballooning when a VM needs addition
-al memory. This ensures all five VMs operate smoothly while maintaining sufficient memory
+The reserve can be dynamically assigned using memory ballooning when a VM needs additional
+memory. This ensures all five VMs operate smoothly while maintaining sufficient memory
 for the host.
