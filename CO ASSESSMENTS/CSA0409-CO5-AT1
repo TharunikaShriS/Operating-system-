@@ -1,0 +1,59 @@
+1. Optimized Linux File System Layout
+
+For a 50 GB server, separate partitions can be created for the OS, logs, user files, and
+application data. For example, `/` can have 8 GB, `/boot` 1 GB, `/var` 10 GB, `/home` 12
+GB, and `/opt` 14 GB, with the remaining space for swap/reserve. Keeping `/var` separate
+prevents logs from filling the root partition.
+LVM can be used because it allows partitions to be resized when required. 
+Logrotate should be configured to rotate, compress, and delete old logs so that log
+files remain below 10 GB. This prevents disk exhaustion and allows critical services
+to continue operating.
+
+2. Kernel-Level Optimization
+
+Frequent context switching wastes CPU time. Tools such as `vmstat` and `pidstat` can
+identify processes causing excessive switching.
+CPU affinity using `taskset` can assign important processes to specific CPU cores. 
+`nice` and `renice` can adjust process priority, while `chrt` can provide real-time
+scheduling for critical processes. Kernel scheduler parameters can also be tuned using
+`sysctl`. Unnecessary kernel modules can be removed to reduce overhead. These techniques
+improve CPU performance without hardware upgrades.
+
+3. Processing 1 Million Log Entries
+
+For processing large log files, optimized commands such as grep, awk, sort, and
+uniq should be used instead of slow shell loops.
+grep 'ERROR' logfile.log | awk '{print $5}' | sort | uniq -c
+`grep` filters the required entries, `awk` extracts information, and `sort` and `uniq` 
+group and count the results. These commands are optimized for large text files and reduce
+shell overhead, helping the script process 1 million entries efficiently within the 
+2-minute target.
+
+4. Managing a High-CPU Faulty Process
+
+First, identify the process using `top`, `htop`, or:
+ps -eo pid,cmd,%cpu --sort=-%cpu | head
+Use `pidstat` to monitor the process. Instead of immediately terminating it,
+reduce its priority using `renice` or limit its CPU using `cpulimit` or cgroups.
+If it continues affecting the system, terminate it gracefully using:
+kill PID
+Use `kill -9 PID` only if it does not respond. This controls the faulty process without
+restarting the system or disturbing critical services.
+
+5. RAM Allocation for 5 VMs
+
+Total RAM = 16 GB
+Host OS = 4 GB
+So, available for VMs:
+16 − 4 = 12 GB
+Five VMs require:
+5 × 2 = 10 GB
+Therefore, allocate 2 GB to each VM and keep 2 GB as a reserve.
+| Resource |   RAM |
+| -------- | ----: |
+| Host OS  |  4 GB |
+| 5 VMs    | 10 GB |
+| Reserve  |  2 GB |
+The reserve can be dynamically assigned using memory ballooning when a VM needs addition
+al memory. This ensures all five VMs operate smoothly while maintaining sufficient memory
+for the host.
