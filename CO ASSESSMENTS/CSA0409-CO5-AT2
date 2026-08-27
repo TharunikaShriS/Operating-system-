@@ -1,4 +1,5 @@
 1. File System Space Management
+
 BEGIN
     SET threshold = 80%
     usage = GET_DISK_USAGE()
@@ -21,6 +22,7 @@ BEGIN
 END
 
 2. Priority-Based CPU Scheduling
+
 BEGIN
     INPUT process_list
     WHILE process_list IS NOT EMPTY DO
@@ -39,6 +41,7 @@ BEGIN
 END
 
 3. RAM Allocation Among Virtual Machines
+
 BEGIN
     total_RAM = 16 GB
     host_reserved = 4 GB
@@ -57,6 +60,7 @@ BEGIN
 END
 
 4. Hypervisor Selection
+
 BEGIN
     INPUT performance_required
     INPUT budget
@@ -72,6 +76,7 @@ BEGIN
 END
 
 5. CPU and Memory Resource Limiting
+
 BEGIN
     INPUT application_list
     FOR each app IN application_list DO
