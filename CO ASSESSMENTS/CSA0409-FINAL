@@ -1,0 +1,80 @@
+#include <stdio.h>
+
+#define N 5
+
+int main() {
+    int pid[N] = {1, 2, 3, 4, 5};
+    int at[N] = {0, 1, 2, 3, 4};
+    int bt[N] = {5, 2, 8, 3, 6};
+    int rem[N] = {5, 2, 8, 3, 6};
+    int ct[N], tat[N], wt[N];
+
+    int queue[100], front = 0, rear = 0;
+    int visited[N] = {0};
+    int completed = 0;
+    int time = 0;
+    int tq = 2;
+
+    printf("ROUND ROBIN CPU SCHEDULING\n");
+    printf("Time Quantum = %d ms\n\n", tq);
+
+    while (completed < N) {
+
+        for (int i = 0; i < N; i++) {
+            if (at[i] <= time && !visited[i]) {
+                queue[rear++] = i;
+                visited[i] = 1;
+            }
+        }
+
+        if (front == rear) {
+            time++;
+            continue;
+        }
+
+        int i = queue[front++];
+
+        int start = time;
+        int execute = (rem[i] < tq) ? rem[i] : tq;
+
+        time += execute;
+        rem[i] -= execute;
+
+        printf("P%d: %d - %d\n", pid[i], start, time);
+
+        for (int j = 0; j < N; j++) {
+            if (at[j] <= time && !visited[j]) {
+                queue[rear++] = j;
+                visited[j] = 1;
+            }
+        }
+
+        if (rem[i] > 0) {
+            queue[rear++] = i;
+        } else {
+            ct[i] = time;
+            completed++;
+        }
+    }
+
+    float avgWT = 0, avgTAT = 0;
+
+    printf("\nPID\tAT\tBT\tCT\tTAT\tWT\n");
+
+    for (int i = 0; i < N; i++) {
+        tat[i] = ct[i] - at[i];
+        wt[i] = tat[i] - bt[i];
+
+        avgTAT += tat[i];
+        avgWT += wt[i];
+
+        printf("P%d\t%d\t%d\t%d\t%d\t%d\n",
+               pid[i], at[i], bt[i],
+               ct[i], tat[i], wt[i]);
+    }
+
+    printf("\nAverage Waiting Time = %.2f ms\n", avgWT / N);
+    printf("Average Turnaround Time = %.2f ms\n", avgTAT / N);
+
+    return 0;
+}
